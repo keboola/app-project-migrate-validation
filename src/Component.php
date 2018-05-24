@@ -32,9 +32,10 @@ class Component extends BaseComponent
         }
 
         foreach ($results as $resultMessage) {
-            $this->getLogger()->error($resultMessage);
+            $this->getLogger()->info($resultMessage);
         }
-        throw new UserException('Project cannot be migrated, please resolve first validation issues');
+
+        throw new UserException('Project cannot be migrated. Please resolve first validation issues listed below.');
     }
 
     protected function getConfigClass(): string
