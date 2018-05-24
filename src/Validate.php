@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Keboola\ProjectMigrateValidation;
 
+use Keboola\StorageApi\Components;
+use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
+
 class Validate
 {
     public const LEGACY_COMPONENTS = [
@@ -16,6 +19,54 @@ class Validate
         'restbox',
         'rt-lucky-guess',
     ];
+
+    public const KEBOOLA_GOOD_DATA_TOKENS = [
+        'keboola_production',
+        'keboola_demo',
+    ];
+
+    /** @var Components */
+    private $componentsApi;
+
+    /** @var GoodDataWriterClientV2 */
+    private $goodDataWriterClient;
+
+    public function __construct(
+        Components $componentsApi,
+        GoodDataWriterClientV2 $goodDataWriterClient
+    ) {
+        $this->componentsApi = $componentsApi;
+        $this->goodDataWriterClient = $goodDataWriterClient;
+    }
+
+    public function run()
+    {
+        $results = [];
+
+        $results = array_merge(
+            $results,
+            self::checkLegacyComponents($this->componentsApi->listComponents())
+        );
+
+        $transformations = $this->componentsApi->listComponentConfigurations(
+            (new ListComponentConfigurationsOptions())->setComponentId('transformation')
+        );
+        $results = array_merge(
+            $results,
+            self::checkBackendTransformations('mysql', $transformations)
+        );
+        $results = array_merge(
+            $results,
+            self::checkBackendTransformations('redshift', $transformations)
+        );
+
+        $results = array_merge(
+            $results,
+            self::checkGoodDataWritersTokens($this->goodDataWriterClient->getWriters())
+        );
+
+        return $results;
+    }
 
     public static function checkLegacyComponents(array $components): array
     {
@@ -62,7 +113,19 @@ class Validate
         ];
     }
 
-    public static function checkGoodDataWritersTokens(): void
+    public static function checkGoodDataWritersTokens(array $writers): array
     {
+        $results = [];
+        foreach ($writers as $writer) {
+            if (in_array($writer['project']['authToken'], self::KEBOOLA_GOOD_DATA_TOKENS)) {
+                continue;
+            }
+            $results[] = sprintf(
+                'GoodData writer %s is using custom auth token: %s',
+                $writer['id'],
+                $writer['project']['authToken']
+            );
+        }
+        return $results;
     }
 }
