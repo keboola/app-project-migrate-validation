@@ -22,7 +22,7 @@ class ValidateTest extends TestCase
      * @param array $expectedResults
      * @throws \ReflectionException
      */
-    public function testRun(array $components, array $transformations, array $writers, array $expectedResults)
+    public function testRun(array $components, array $transformations, array $writers, array $expectedResults): void
     {
         /** @var Components|MockObject $componentsMock */
         $componentsMock = $this->createMock(Components::class);
@@ -130,7 +130,7 @@ class ValidateTest extends TestCase
                             'active' => true,
                             'main' => true,
                             'authToken' => 'keboola_demo',
-                        ]
+                        ],
                     ],
                     [
                         'id' => 'custom',
@@ -141,7 +141,7 @@ class ValidateTest extends TestCase
                             'active' => true,
                             'main' => true,
                             'authToken' => 'keboola_production',
-                        ]
+                        ],
                     ],
                 ],
                 // result
@@ -217,7 +217,7 @@ class ValidateTest extends TestCase
                             'active' => true,
                             'main' => true,
                             'authToken' => 'keboola_demo',
-                        ]
+                        ],
                     ],
                     [
                         'id' => 'custom',
@@ -228,7 +228,7 @@ class ValidateTest extends TestCase
                             'active' => true,
                             'main' => true,
                             'authToken' => 'SZVXXX',
-                        ]
+                        ],
                     ],
                 ],
                 // result
@@ -241,5 +241,4 @@ class ValidateTest extends TestCase
             ],
         ];
     }
-
 }

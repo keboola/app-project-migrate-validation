@@ -39,7 +39,7 @@ class Validate
         $this->goodDataWriterClient = $goodDataWriterClient;
     }
 
-    public function run()
+    public function run(): array
     {
         $results = [];
 

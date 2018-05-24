@@ -117,7 +117,7 @@ class ValidationsTest extends TestCase
      * @param array $writers
      * @param array $expectedResults
      */
-    public function testNonKeboolaTokenWriters(array $writers, array $expectedResults)
+    public function testNonKeboolaTokenWriters(array $writers, array $expectedResults): void
     {
         $this->assertEquals($expectedResults, Validate::checkGoodDataWritersTokens($writers));
     }
@@ -136,7 +136,7 @@ class ValidationsTest extends TestCase
                             'active' => true,
                             'main' => true,
                             'authToken' => 'keboola_demo',
-                        ]
+                        ],
                     ],
                     [
                         'id' => 'custom',
@@ -147,7 +147,7 @@ class ValidationsTest extends TestCase
                             'active' => true,
                             'main' => true,
                             'authToken' => 'XZASDF',
-                        ]
+                        ],
                     ],
                 ],
                 [
