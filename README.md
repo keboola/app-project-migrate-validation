@@ -1,12 +1,17 @@
-# my-component
+# Project Migration Validation
 
-[![Build Status](https://travis-ci.org/keboola/my-component.svg?branch=master)](https://travis-ci.org/keboola/my-component)
+[![Build Status](https://travis-ci.com/keboola/app-project-migrate-validation.svg?branch=master)](https://travis-ci.com/keboola/app-project-migrate-validation)
 
-> Fill in description
+The application checks if KBC project can be migrated into another KBC region.
+Application validates the project in which it is executed. If everything is ok job ends with success,
+otherwise validation issues are printed into log and job ends with error.
 
-# Usage
+Performed validations:
 
-> fill in usage instructions
+- Legacy components used
+- MySQL transformations
+- Redshift transformations
+- GoodData writers with custom authorization tokens
 
 ## Development
  
