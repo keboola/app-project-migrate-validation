@@ -35,7 +35,7 @@ class Component extends BaseComponent
             $this->getLogger()->info($resultMessage);
         }
 
-        throw new UserException('Project cannot be migrated. Please resolve first validation issues listed below.');
+        throw new UserException('Project cannot be migrated. Please resolve validation issues listed below first.');
     }
 
     protected function getConfigClass(): string
