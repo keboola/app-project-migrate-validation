@@ -23,6 +23,7 @@ class Validate
     public const KEBOOLA_GOOD_DATA_TOKENS = [
         'keboola_production',
         'keboola_demo',
+        'keboola_vertica',
     ];
 
     /** @var Components */
