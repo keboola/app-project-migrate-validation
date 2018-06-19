@@ -139,6 +139,17 @@ class ValidationsTest extends TestCase
                         ],
                     ],
                     [
+                        'id' => 'vertica',
+                        'status' => 'ready',
+                        'project' => [
+                            'id' => '234',
+                            'pid' => 'xrz',
+                            'active' => true,
+                            'main' => true,
+                            'authToken' => 'keboola_vertica',
+                        ],
+                    ],
+                    [
                         'id' => 'custom',
                         'status' => 'ready',
                         'project' => [
