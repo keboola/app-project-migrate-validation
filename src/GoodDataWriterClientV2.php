@@ -46,7 +46,6 @@ class GoodDataWriterClientV2
 
     public function getWriters(): array
     {
-        $request = $this->client->get('v2?include=project');
-        return $this->client->send($request)->json();
+        return [];
     }
 }
