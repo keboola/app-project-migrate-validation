@@ -48,4 +48,11 @@ class GoodDataWriterClientV2
     {
         return [];
     }
+
+    public function dummy(): array
+    {
+        $request = $this->client->get('v2?include=project');
+        return $this->client->send($request)->json();
+    }
+
 }
