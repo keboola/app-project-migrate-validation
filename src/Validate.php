@@ -18,35 +18,27 @@ class Validate
         'ex-zendesk',
         'restbox',
         'rt-lucky-guess',
+        'gooddata-writer',
     ];
 
-    public const KEBOOLA_GOOD_DATA_TOKENS = [
-        'keboola_production',
-        'keboola_demo',
-        'keboola_vertica',
-    ];
+    public const KEBOOLA_GOODDATA_WRITER = 'keboola.gooddata-writer';
 
     /** @var Components */
     private $componentsApi;
 
-    /** @var GoodDataWriterClientV2 */
-    private $goodDataWriterClient;
-
-    public function __construct(
-        Components $componentsApi,
-        GoodDataWriterClientV2 $goodDataWriterClient
-    ) {
+    public function __construct(Components $componentsApi)
+    {
         $this->componentsApi = $componentsApi;
-        $this->goodDataWriterClient = $goodDataWriterClient;
     }
 
     public function run(): array
     {
         $results = [];
 
+        $components = $this->componentsApi->listComponents();
         $results = array_merge(
             $results,
-            self::checkLegacyComponents($this->componentsApi->listComponents())
+            self::checkLegacyComponents($components)
         );
 
         $transformations = $this->componentsApi->listComponentConfigurations(
@@ -63,7 +55,7 @@ class Validate
 
         $results = array_merge(
             $results,
-            self::checkGoodDataWritersTokens($this->goodDataWriterClient->getWriters())
+            self::checkGoodDataWriter($components)
         );
 
         return $results;
@@ -114,19 +106,16 @@ class Validate
         ];
     }
 
-    public static function checkGoodDataWritersTokens(array $writers): array
+    public static function checkGoodDataWriter(array $components): array
     {
-        $results = [];
-        foreach ($writers as $writer) {
-            if (in_array($writer['project']['authToken'], self::KEBOOLA_GOOD_DATA_TOKENS)) {
-                continue;
+        foreach ($components as $component) {
+            if ($component['id'] === self::KEBOOLA_GOODDATA_WRITER) {
+                return [sprintf(
+                    '%d configuration(s) of GoodData writer found',
+                    count($component['configurations'])
+                )];
             }
-            $results[] = sprintf(
-                'GoodData writer %s is using custom auth token: %s',
-                $writer['id'],
-                $writer['project']['authToken']
-            );
         }
-        return $results;
+        return [];
     }
 }

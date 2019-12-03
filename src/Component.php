@@ -19,10 +19,7 @@ class Component extends BaseComponent
             'runId' => getenv('KBC_RUNID'),
         ]);
 
-        $validate = new Validate(
-            new Components($storageClient),
-            GoodDataWriterClientV2::createFromStorageClient($storageClient)
-        );
+        $validate = new Validate(new Components($storageClient));
 
         $results = $validate->run();
 
