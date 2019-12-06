@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Keboola\ProjectMigrateValidation\Tests;
 
-use Keboola\ProjectMigrateValidation\GoodDataWriterClientV2;
 use Keboola\ProjectMigrateValidation\Validate;
 use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -18,17 +17,13 @@ class ValidateTest extends TestCase
      * @dataProvider runWithoutErrorProvider
      * @param array $components
      * @param array $transformations
-     * @param array $writers
      * @param array $expectedResults
      * @throws \ReflectionException
      */
-    public function testRun(array $components, array $transformations, array $writers, array $expectedResults): void
+    public function testRun(array $components, array $transformations, array $expectedResults): void
     {
         /** @var Components|MockObject $componentsMock */
         $componentsMock = $this->createMock(Components::class);
-
-        /** @var GoodDataWriterClientV2|MockObject $goodDataWriterMock */
-        $goodDataWriterMock = $this->createMock(GoodDataWriterClientV2::class);
 
         $componentsMock->expects($this->once())
             ->method('listComponents')
@@ -41,13 +36,7 @@ class ValidateTest extends TestCase
             )
             ->willReturn($transformations);
 
-
-        $goodDataWriterMock->expects($this->once())
-            ->method('getWriters')
-            ->willReturn($writers);
-
-
-        $validate = new Validate($componentsMock, $goodDataWriterMock);
+        $validate = new Validate($componentsMock);
         $results = $validate->run();
         $this->assertEquals($expectedResults, $results);
     }
@@ -119,31 +108,6 @@ class ValidateTest extends TestCase
                         ],
                     ],
                 ],
-                // writers
-                [
-                    [
-                        'id' => 'martin',
-                        'status' => 'ready',
-                        'project' => [
-                            'id' => '234',
-                            'pid' => 'xrz',
-                            'active' => true,
-                            'main' => true,
-                            'authToken' => 'keboola_demo',
-                        ],
-                    ],
-                    [
-                        'id' => 'custom',
-                        'status' => 'ready',
-                        'project' => [
-                            'id' => '234',
-                            'pid' => 'xrz',
-                            'active' => true,
-                            'main' => true,
-                            'authToken' => 'keboola_production',
-                        ],
-                    ],
-                ],
                 // result
                 [],
 
@@ -172,6 +136,26 @@ class ValidateTest extends TestCase
                             [
                                 'id' => '576624',
                                 'name' => 'webdav',
+                            ],
+                        ],
+                    ],
+                    [
+                        'id' => 'gooddata-writer',
+                        'name' => 'first',
+                        'configurations' => [
+                            [
+                                'id' => '576624',
+                                'name' => 'webdav',
+                            ],
+                        ],
+                    ],
+                    [
+                        'id' => 'keboola.gooddata-writer',
+                        'name' => 'writer',
+                        'configurations' => [
+                            [
+                                'id' => '12345656',
+                                'name' => 'example',
                             ],
                         ],
                     ],
@@ -206,37 +190,13 @@ class ValidateTest extends TestCase
                         ],
                     ],
                 ],
-                // writers
-                [
-                    [
-                        'id' => 'martin',
-                        'status' => 'ready',
-                        'project' => [
-                            'id' => '234',
-                            'pid' => 'xrz',
-                            'active' => true,
-                            'main' => true,
-                            'authToken' => 'keboola_demo',
-                        ],
-                    ],
-                    [
-                        'id' => 'custom',
-                        'status' => 'ready',
-                        'project' => [
-                            'id' => '234',
-                            'pid' => 'xrz',
-                            'active' => true,
-                            'main' => true,
-                            'authToken' => 'SZVXXX',
-                        ],
-                    ],
-                ],
                 // result
                 [
                     '2 configurations of legacy restbox component found',
+                    '1 configurations of legacy gooddata-writer component found',
                     '1 mysql transformation(s) found',
                     '1 redshift transformation(s) found',
-                    'GoodData writer custom is using custom auth token: SZVXXX',
+                    '1 configuration(s) of GoodData writer found',
                 ],
             ],
         ];
