@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Keboola\ProjectMigrateValidation\Tests;
 
 use Keboola\ProjectMigrateValidation\Validate;
-use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
+use Keboola\StorageApi\Client;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Keboola\StorageApi\Components;
 
 class ValidateTest extends TestCase
 {
@@ -20,23 +19,38 @@ class ValidateTest extends TestCase
      * @param array $expectedResults
      * @throws \ReflectionException
      */
-    public function testRun(array $components, array $transformations, array $expectedResults): void
+    public function testRun(array $components, array $transformations, array $features, array $expectedResults): void
     {
-        /** @var Components|MockObject $componentsMock */
-        $componentsMock = $this->createMock(Components::class);
-
-        $componentsMock->expects($this->once())
-            ->method('listComponents')
-            ->willReturn($components);
-
-        $componentsMock->expects($this->once())
-            ->method('listComponentConfigurations')
-            ->with(
-                (new ListComponentConfigurationsOptions())->setComponentId('transformation')
+        /** @var MockObject $sourceClient */
+        $sourceClient = $this->createMock(Client::class);
+        $sourceClient
+            ->expects($this->exactly(2))
+            ->method('apiGet')
+            ->withConsecutive(
+                ['components?include='],
+                ['components/transformation/configs?'],
             )
-            ->willReturn($transformations);
+            ->willReturnOnConsecutiveCalls(
+                $components,
+                $transformations
+            )
+        ;
 
-        $validate = new Validate($componentsMock);
+        $sourceClient
+            ->method('indexAction')
+            ->with(null)
+            ->willReturn(['features' => $features['source']]);
+
+        /** @var MockObject $destinationClient */
+        $destinationClient = $this->createMock(Client::class);
+        $destinationClient
+            ->method('indexAction')
+            ->with(null)
+            ->willReturn(['features' => $features['destination']]);
+
+        /** @var Client $sourceClient */
+        /** @var Client $destinationClient */
+        $validate = new Validate($sourceClient, $destinationClient);
         $results = $validate->run();
         $this->assertEquals($expectedResults, $results);
     }
@@ -47,7 +61,11 @@ class ValidateTest extends TestCase
             'empty' => [
                 [],
                 [],
-                [],
+                // features
+                [
+                    'source' => ['queuev2'],
+                    'destination' =>['queuev2'],
+                ],
                 [],
             ],
             'ok' => [
@@ -107,6 +125,11 @@ class ValidateTest extends TestCase
                             ],
                         ],
                     ],
+                ],
+                // features
+                [
+                    'source' => ['queuev2'],
+                    'destination' =>['queuev2'],
                 ],
                 // result
                 [],
@@ -190,6 +213,11 @@ class ValidateTest extends TestCase
                         ],
                     ],
                 ],
+                // features
+                [
+                    'source' => [],
+                    'destination' =>[],
+                ],
                 // result
                 [
                     '2 configurations of legacy restbox component found',
@@ -197,6 +225,9 @@ class ValidateTest extends TestCase
                     '1 mysql transformation(s) found',
                     '1 redshift transformation(s) found',
                     '1 configuration(s) of GoodData writer found',
+                    'Source project hasn\'t "Queue v2" feature.',
+                    'Destination project hasn\'t "Queue v2" feature.',
+
                 ],
             ],
         ];
