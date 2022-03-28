@@ -51,7 +51,7 @@ class Validate
             self::checkBackendTransformations('mysql', $transformations),
             self::checkBackendTransformations('redshift', $transformations),
             self::checkGoodDataWriter($components),
-            self::checkProjectsBackend($this->sourceClient, $this->destinationClient)
+            self::checkProjectsQueue($this->sourceClient, $this->destinationClient)
         );
 
         return $results;
@@ -115,7 +115,7 @@ class Validate
         return [];
     }
 
-    private static function checkProjectsBackend(Client $sourceClient, Client $destinationClient): array
+    private static function checkProjectsQueue(Client $sourceClient, Client $destinationClient): array
     {
         $result = [];
         foreach (['source' => $sourceClient, 'destination' => $destinationClient] as $key => $client) {
