@@ -14,13 +14,14 @@ class ValidateTest extends TestCase
 
     /**
      * @dataProvider runWithoutErrorProvider
-     * @param array $components
-     * @param array $transformations
-     * @param array $expectedResults
-     * @throws \ReflectionException
      */
-    public function testRun(array $components, array $transformations, array $features, array $expectedResults): void
-    {
+    public function testRun(
+        array $components,
+        array $transformations,
+        array $features,
+        array $verifyToken,
+        array $expectedResults
+    ): void {
         /** @var MockObject $sourceClient */
         $sourceClient = $this->createMock(Client::class);
         $sourceClient
@@ -37,9 +38,15 @@ class ValidateTest extends TestCase
         ;
 
         $sourceClient
+            ->expects($this->once())
             ->method('indexAction')
             ->with(null)
             ->willReturn(['features' => $features['source']]);
+
+        $sourceClient
+            ->expects($this->once())
+            ->method('verifyToken')
+            ->willReturn($verifyToken['source']);
 
         /** @var MockObject $destinationClient */
         $destinationClient = $this->createMock(Client::class);
@@ -47,6 +54,11 @@ class ValidateTest extends TestCase
             ->method('indexAction')
             ->with(null)
             ->willReturn(['features' => $features['destination']]);
+
+        $destinationClient
+            ->expects($this->once())
+            ->method('verifyToken')
+            ->willReturn($verifyToken['destination']);
 
         /** @var Client $sourceClient */
         /** @var Client $destinationClient */
@@ -58,13 +70,35 @@ class ValidateTest extends TestCase
     public function runWithoutErrorProvider(): array
     {
         return [
-            'empty' => [
+            'empty-components' => [
                 [],
                 [],
                 // features
                 [
                     'source' => ['queuev2'],
                     'destination' =>['queuev2'],
+                ],
+                [
+                    'source' => [
+                        'owner' => [
+                            'hasMysql' => false,
+                            'hasSynapse' => false,
+                            'hasRedshift' => false,
+                            'hasSnowflake' => true,
+                            'hasExasol' => false,
+                            'hasTeradata' => false,
+                        ],
+                    ],
+                    'destination' =>[
+                        'owner' => [
+                            'hasMysql' => false,
+                            'hasSynapse' => false,
+                            'hasRedshift' => false,
+                            'hasSnowflake' => true,
+                            'hasExasol' => false,
+                            'hasTeradata' => false,
+                        ],
+                    ],
                 ],
                 [],
             ],
@@ -130,6 +164,28 @@ class ValidateTest extends TestCase
                 [
                     'source' => ['queuev2'],
                     'destination' =>['queuev2'],
+                ],
+                [
+                    'source' => [
+                        'owner' => [
+                            'hasMysql' => false,
+                            'hasSynapse' => false,
+                            'hasRedshift' => false,
+                            'hasSnowflake' => true,
+                            'hasExasol' => false,
+                            'hasTeradata' => false,
+                        ],
+                    ],
+                    'destination' =>[
+                        'owner' => [
+                            'hasMysql' => false,
+                            'hasSynapse' => false,
+                            'hasRedshift' => false,
+                            'hasSnowflake' => true,
+                            'hasExasol' => false,
+                            'hasTeradata' => false,
+                        ],
+                    ],
                 ],
                 // result
                 [],
@@ -218,6 +274,28 @@ class ValidateTest extends TestCase
                     'source' => [],
                     'destination' =>[],
                 ],
+                [
+                    'source' => [
+                        'owner' => [
+                            'hasMysql' => false,
+                            'hasSynapse' => false,
+                            'hasRedshift' => false,
+                            'hasSnowflake' => true,
+                            'hasExasol' => false,
+                            'hasTeradata' => false,
+                        ],
+                    ],
+                    'destination' =>[
+                        'owner' => [
+                            'hasMysql' => false,
+                            'hasSynapse' => true,
+                            'hasRedshift' => false,
+                            'hasSnowflake' => false,
+                            'hasExasol' => false,
+                            'hasTeradata' => false,
+                        ],
+                    ],
+                ],
                 // result
                 [
                     '2 configurations of legacy restbox component found',
@@ -227,7 +305,8 @@ class ValidateTest extends TestCase
                     '1 configuration(s) of GoodData writer found',
                     'Source project hasn\'t "Queue v2" feature.',
                     'Destination project hasn\'t "Queue v2" feature.',
-
+                    'Synapse backend isn\'t same on source (OFF) and destination (ON) projects.',
+                    'Snowflake backend isn\'t same on source (ON) and destination (OFF) projects.',
                 ],
             ],
         ];
