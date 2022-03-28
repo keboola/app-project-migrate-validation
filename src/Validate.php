@@ -51,7 +51,8 @@ class Validate
             self::checkBackendTransformations('mysql', $transformations),
             self::checkBackendTransformations('redshift', $transformations),
             self::checkGoodDataWriter($components),
-            self::checkProjectsQueue($this->sourceClient, $this->destinationClient)
+            self::checkProjectsQueue($this->sourceClient, $this->destinationClient),
+            self::checkProjectsBackend($this->sourceClient, $this->destinationClient)
         );
 
         return $results;
@@ -126,6 +127,26 @@ class Validate
                 );
             }
         }
+        return $result;
+    }
+
+    private static function checkProjectsBackend(Client $sourceClient, Client $destinationClient): array
+    {
+        $result = [];
+        $sourceVerifyToken = $sourceClient->verifyToken();
+        $destinationVerifyToken = $destinationClient->verifyToken();
+
+        foreach (['hasMysql', 'hasSynapse', 'hasRedshift', 'hasSnowflake', 'hasExasol', 'hasTeradata'] as $backend) {
+            if ($sourceVerifyToken['owner'][$backend] !== $destinationVerifyToken['owner'][$backend]) {
+                $result[] = sprintf(
+                    '%s backend isn\'t same on source (%s) and destination (%s) projects.',
+                    substr($backend, 3),
+                    $sourceVerifyToken['owner'][$backend] === true ? 'ON' : 'OFF',
+                    $destinationVerifyToken['owner'][$backend] === true ? 'ON' : 'OFF'
+                );
+            }
+        }
+
         return $result;
     }
 }
