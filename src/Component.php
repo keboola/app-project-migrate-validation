@@ -7,19 +7,26 @@ namespace Keboola\ProjectMigrateValidation;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
 use Keboola\StorageApi\Client;
-use Keboola\StorageApi\Components;
 
 class Component extends BaseComponent
 {
-    public function run(): void
+    protected function run(): void
     {
-        $storageClient = new Client([
+        $sourceStorageClient = new Client([
             'url' => getenv('KBC_URL'),
             'token' => getenv('KBC_TOKEN'),
             'runId' => getenv('KBC_RUNID'),
         ]);
 
-        $validate = new Validate(new Components($storageClient));
+        $destinationStorageClient = new Client([
+            'url' => $this->getConfig()->getDestinationKbcUrl(),
+            'token' => $this->getConfig()->getDestinationKbcToken(),
+        ]);
+
+        $validate = new Validate(
+            $sourceStorageClient,
+            $destinationStorageClient
+        );
 
         $results = $validate->run();
 
@@ -33,6 +40,13 @@ class Component extends BaseComponent
         }
 
         throw new UserException('Project cannot be migrated. Please resolve validation issues listed below first.');
+    }
+
+    public function getConfig(): Config
+    {
+        /** @var Config $config */
+        $config = parent::getConfig();
+        return  $config;
     }
 
     protected function getConfigClass(): string

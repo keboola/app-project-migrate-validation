@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Keboola\ProjectMigrateValidation;
 
+use Keboola\StorageApi\Client;
 use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
 
@@ -23,39 +24,34 @@ class Validate
 
     public const KEBOOLA_GOODDATA_WRITER = 'keboola.gooddata-writer';
 
-    /** @var Components */
-    private $componentsApi;
+    private Client $sourceClient;
 
-    public function __construct(Components $componentsApi)
+    private Client $destinationClient;
+
+    public function __construct(Client $sourceClient, Client $destinationClient)
     {
-        $this->componentsApi = $componentsApi;
+        $this->sourceClient = $sourceClient;
+        $this->destinationClient = $destinationClient;
     }
 
     public function run(): array
     {
         $results = [];
 
-        $components = $this->componentsApi->listComponents();
-        $results = array_merge(
-            $results,
-            self::checkLegacyComponents($components)
-        );
+        $sourceComponentsApi = new Components($this->sourceClient);
 
-        $transformations = $this->componentsApi->listComponentConfigurations(
+        $components = $sourceComponentsApi->listComponents();
+        $transformations = $sourceComponentsApi->listComponentConfigurations(
             (new ListComponentConfigurationsOptions())->setComponentId('transformation')
         );
-        $results = array_merge(
-            $results,
-            self::checkBackendTransformations('mysql', $transformations)
-        );
-        $results = array_merge(
-            $results,
-            self::checkBackendTransformations('redshift', $transformations)
-        );
 
         $results = array_merge(
             $results,
-            self::checkGoodDataWriter($components)
+            self::checkLegacyComponents($components),
+            self::checkBackendTransformations('mysql', $transformations),
+            self::checkBackendTransformations('redshift', $transformations),
+            self::checkGoodDataWriter($components),
+            self::checkProjectsBackend($this->sourceClient, $this->destinationClient)
         );
 
         return $results;
@@ -117,5 +113,19 @@ class Validate
             }
         }
         return [];
+    }
+
+    private static function checkProjectsBackend(Client $sourceClient, Client $destinationClient): array
+    {
+        $result = [];
+        foreach (['source' => $sourceClient, 'destination' => $destinationClient] as $key => $client) {
+            if (!in_array('queuev2', $client->indexAction()['features'])) {
+                $result[] = sprintf(
+                    '%s project hasn\'t "Queue v2" feature.',
+                    ucfirst($key)
+                );
+            }
+        }
+        return $result;
     }
 }

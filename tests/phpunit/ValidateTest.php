@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Keboola\ProjectMigrateValidation\Tests;
 
 use Keboola\ProjectMigrateValidation\Validate;
+use Keboola\StorageApi\Client;
+use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Keboola\StorageApi\Components;
 
 class ValidateTest extends TestCase
 {
@@ -22,21 +23,36 @@ class ValidateTest extends TestCase
      */
     public function testRun(array $components, array $transformations, array $expectedResults): void
     {
-        /** @var Components|MockObject $componentsMock */
-        $componentsMock = $this->createMock(Components::class);
-
-        $componentsMock->expects($this->once())
-            ->method('listComponents')
-            ->willReturn($components);
-
-        $componentsMock->expects($this->once())
-            ->method('listComponentConfigurations')
-            ->with(
-                (new ListComponentConfigurationsOptions())->setComponentId('transformation')
+        /** @var MockObject $sourceClient */
+        $sourceClient = $this->createMock(Client::class);
+        $sourceClient
+            ->expects($this->exactly(2))
+            ->method('apiGet')
+            ->withConsecutive(
+                ['components?include='],
+                ['components/transformation/configs?'],
             )
-            ->willReturn($transformations);
+            ->willReturnOnConsecutiveCalls(
+                $components,
+                $transformations
+            )
+        ;
 
-        $validate = new Validate($componentsMock);
+        $sourceClient
+            ->method('indexAction')
+            ->with(null)
+            ->willReturn(['features' => ['queuev2']]);
+
+        /** @var MockObject $destinationClient */
+        $destinationClient = $this->createMock(Client::class);
+        $destinationClient
+            ->method('indexAction')
+            ->with(null)
+            ->willReturn(['features' => ['queuev2']]);
+
+        /** @var Client $sourceClient */
+        /** @var Client $destinationClient */
+        $validate = new Validate($sourceClient, $destinationClient);
         $results = $validate->run();
         $this->assertEquals($expectedResults, $results);
     }

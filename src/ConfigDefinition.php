@@ -16,9 +16,13 @@ class ConfigDefinition extends BaseConfigDefinition
         /** @noinspection NullPointerExceptionInspection */
         $parametersNode
             ->children()
-                ->scalarNode('foo')
-                    ->defaultValue('baz')
-                ->end()
+            ->scalarNode('destinationKbcUrl')
+                ->isRequired()
+                ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('#destinationKbcToken')
+                ->isRequired()
+                ->cannotBeEmpty()
             ->end()
         ;
         // @formatter:on
