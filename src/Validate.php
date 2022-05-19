@@ -120,7 +120,7 @@ class Validate
     {
         $result = [];
         foreach (['source' => $sourceClient, 'destination' => $destinationClient] as $key => $client) {
-            if (!in_array('queuev2', $client->indexAction()['features'])) {
+            if (!in_array('queuev2', $client->verifyToken()['owner']['features'])) {
                 $result[] = sprintf(
                     '%s project hasn\'t "Queue v2" feature.',
                     ucfirst($key)
