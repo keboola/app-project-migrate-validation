@@ -18,7 +18,6 @@ class ValidateTest extends TestCase
     public function testRun(
         array $components,
         array $transformations,
-        array $features,
         array $verifyToken,
         array $expectedResults
     ): void {
@@ -38,25 +37,15 @@ class ValidateTest extends TestCase
         ;
 
         $sourceClient
-            ->expects($this->once())
-            ->method('indexAction')
-            ->with(null)
-            ->willReturn(['features' => $features['source']]);
-
-        $sourceClient
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('verifyToken')
             ->willReturn($verifyToken['source']);
 
         /** @var MockObject $destinationClient */
         $destinationClient = $this->createMock(Client::class);
-        $destinationClient
-            ->method('indexAction')
-            ->with(null)
-            ->willReturn(['features' => $features['destination']]);
 
         $destinationClient
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('verifyToken')
             ->willReturn($verifyToken['destination']);
 
@@ -73,14 +62,12 @@ class ValidateTest extends TestCase
             'empty-components' => [
                 [],
                 [],
-                // features
-                [
-                    'source' => ['queuev2'],
-                    'destination' =>['queuev2'],
-                ],
                 [
                     'source' => [
                         'owner' => [
+                            'features' => [
+                                'queuev2',
+                            ],
                             'hasMysql' => false,
                             'hasSynapse' => false,
                             'hasRedshift' => false,
@@ -91,6 +78,9 @@ class ValidateTest extends TestCase
                     ],
                     'destination' =>[
                         'owner' => [
+                            'features' => [
+                                'queuev2',
+                            ],
                             'hasMysql' => false,
                             'hasSynapse' => false,
                             'hasRedshift' => false,
@@ -160,14 +150,12 @@ class ValidateTest extends TestCase
                         ],
                     ],
                 ],
-                // features
-                [
-                    'source' => ['queuev2'],
-                    'destination' =>['queuev2'],
-                ],
                 [
                     'source' => [
                         'owner' => [
+                            'features' => [
+                                'queuev2',
+                            ],
                             'hasMysql' => false,
                             'hasSynapse' => false,
                             'hasRedshift' => false,
@@ -178,6 +166,9 @@ class ValidateTest extends TestCase
                     ],
                     'destination' =>[
                         'owner' => [
+                            'features' => [
+                                'queuev2',
+                            ],
                             'hasMysql' => false,
                             'hasSynapse' => false,
                             'hasRedshift' => false,
@@ -269,14 +260,10 @@ class ValidateTest extends TestCase
                         ],
                     ],
                 ],
-                // features
-                [
-                    'source' => [],
-                    'destination' =>[],
-                ],
                 [
                     'source' => [
                         'owner' => [
+                            'features' => [],
                             'hasMysql' => false,
                             'hasSynapse' => false,
                             'hasRedshift' => false,
@@ -287,6 +274,7 @@ class ValidateTest extends TestCase
                     ],
                     'destination' =>[
                         'owner' => [
+                            'features' => [],
                             'hasMysql' => false,
                             'hasSynapse' => true,
                             'hasRedshift' => false,
