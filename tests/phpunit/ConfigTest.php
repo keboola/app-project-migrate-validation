@@ -56,6 +56,4 @@ class ConfigTest extends TestCase
             ],
         ];
     }
-
-
 }
