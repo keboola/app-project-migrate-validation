@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Keboola\ProjectMigrateValidation;
 
+use Keboola\Component\UserException;
 use Keboola\StorageApi\Client;
+use Keboola\StorageApi\ClientException;
 use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
 
@@ -40,20 +42,24 @@ class Validate
 
         $sourceComponentsApi = new Components($this->sourceClient);
 
-        $components = $sourceComponentsApi->listComponents();
-        $transformations = $sourceComponentsApi->listComponentConfigurations(
-            (new ListComponentConfigurationsOptions())->setComponentId('transformation')
-        );
+        try {
+            $components = $sourceComponentsApi->listComponents();
+            $transformations = $sourceComponentsApi->listComponentConfigurations(
+                (new ListComponentConfigurationsOptions())->setComponentId('transformation')
+            );
 
-        $results = array_merge(
-            $results,
-            self::checkLegacyComponents($components),
-            self::checkBackendTransformations('mysql', $transformations),
-            self::checkBackendTransformations('redshift', $transformations),
-            self::checkGoodDataWriter($components),
-            self::checkProjectsQueue($this->sourceClient, $this->destinationClient),
-            self::checkProjectsBackend($this->sourceClient, $this->destinationClient)
-        );
+            $results = array_merge(
+                $results,
+                self::checkLegacyComponents($components),
+                self::checkBackendTransformations('mysql', $transformations),
+                self::checkBackendTransformations('redshift', $transformations),
+                self::checkGoodDataWriter($components),
+                self::checkProjectsQueue($this->sourceClient, $this->destinationClient),
+                self::checkProjectsBackend($this->sourceClient, $this->destinationClient)
+            );
+        } catch (ClientException $e) {
+            throw new UserException($e->getMessage(), $e->getCode(), $e);
+        }
 
         return $results;
     }
