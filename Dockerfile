@@ -10,7 +10,9 @@ WORKDIR /code/
 COPY docker/php-prod.ini /usr/local/etc/php/php.ini
 COPY docker/composer-install.sh /tmp/composer-install.sh
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Debian bullseye packages are only available on archive.debian.org
+RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list \
+	&& apt-get update && apt-get install -y --no-install-recommends \
         git \
         unzip \
 	&& rm -r /var/lib/apt/lists/* \
