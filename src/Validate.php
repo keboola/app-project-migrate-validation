@@ -142,13 +142,16 @@ class Validate
         $sourceVerifyToken = $sourceClient->verifyToken();
         $destinationVerifyToken = $destinationClient->verifyToken();
 
-        foreach (['hasMysql', 'hasSynapse', 'hasRedshift', 'hasSnowflake', 'hasExasol', 'hasTeradata'] as $backend) {
-            if ($sourceVerifyToken['owner'][$backend] !== $destinationVerifyToken['owner'][$backend]) {
+        foreach (['hasMysql', 'hasSynapse', 'hasSnowflake', 'hasExasol', 'hasTeradata'] as $backend) {
+            // Storage API stops returning flags of sunset backends (e.g. hasRedshift), treat missing as OFF
+            $sourceHasBackend = ($sourceVerifyToken['owner'][$backend] ?? false) === true;
+            $destinationHasBackend = ($destinationVerifyToken['owner'][$backend] ?? false) === true;
+            if ($sourceHasBackend !== $destinationHasBackend) {
                 $result[] = sprintf(
                     '%s backend isn\'t same on source (%s) and destination (%s) projects.',
                     substr($backend, 3),
-                    $sourceVerifyToken['owner'][$backend] === true ? 'ON' : 'OFF',
-                    $destinationVerifyToken['owner'][$backend] === true ? 'ON' : 'OFF'
+                    $sourceHasBackend ? 'ON' : 'OFF',
+                    $destinationHasBackend ? 'ON' : 'OFF'
                 );
             }
         }
